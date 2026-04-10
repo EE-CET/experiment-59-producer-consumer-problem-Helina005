@@ -1,42 +1,73 @@
-class SharedResource {
+
+
+
+
+class Q {
     int item;
-    boolean available = false;
+    boolean valueSet = false;
 
-    // TODO: synchronize void put(int item)
-    // while(available) -> wait()
-    // set this.item = item, available = true
-    // print "Produced: " + item
-    // notify()
+    synchronized void put(int item) {
+        while (valueSet) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                System.out.println(e);
+            }
+        }
+        this.item = item;
+        valueSet = true;
+        System.out.println("Produced: " + item);
+        notify();
+    }
 
-    // TODO: synchronize void get()
-    // while(!available) -> wait()
-    // print "Consumed: " + item
-    // available = false
-    // notify()
+    synchronized void get() {
+        while (!valueSet) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                System.out.println(e);
+            }
+        }
+        System.out.println("Consumed: " + item);
+        valueSet = false;
+        notify();
+    }
 }
 
-class Producer extends Thread {
-    SharedResource resource;
-    // TODO: Constructor to init resource
-    
-    // TODO: run()
-    // Loop 1 to 5
-    // call resource.put(i)
+class Producer implements Runnable {
+    Q q;
+
+    Producer(Q q) {
+        this.q = q;
+        new Thread(this, "Producer").start();
+    }
+
+    public void run() {
+        for (int i = 1; i <= 5; i++) {
+            q.put(i);
+        }
+    }
 }
 
-class Consumer extends Thread {
-    SharedResource resource;
-    // TODO: Constructor to init resource
-    
-    // TODO: run()
-    // Loop 1 to 5
-    // call resource.get()
+class Consumer implements Runnable {
+    Q q;
+
+    Consumer(Q q) {
+        this.q = q;
+        new Thread(this, "Consumer").start();
+    }
+
+    public void run() {
+        for (int i = 1; i <= 5; i++) {
+            q.get();
+        }
+    }
 }
 
 public class ProducerConsumer {
     public static void main(String[] args) {
-        // TODO: Create SharedResource object
-        // TODO: Create Producer and Consumer threads
-        // TODO: Start both threads
+        Q q = new Q();
+        new Producer(q);
+        new Consumer(q);
     }
 }
